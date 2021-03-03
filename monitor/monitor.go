@@ -3,7 +3,6 @@ package monitor
 import (
 	"fmt"
 	"strings"
-	"time"
 )
 
 type Monitor struct {
@@ -16,26 +15,26 @@ type Monitor struct {
 
 func (m *Monitor) Start() {
 	m.queue = make(map[string][]string)
+
+	for {
+		m.monitoring()
+	}
 }
 
-func (m Monitor) monitoring() {
-	for {
-		if len(m.queue) == 0 {
-			time.Sleep(10)
-			continue
+func (m *Monitor) monitoring() {
+
+	select {
+	case ms := <-m.ServerChan:
+		if ms.Command == Register {
+			m.register(ms.Process, ms.Term)
+		} else {
+			m.unregister(ms.Process, ms.Term)
 		}
-		select {
-		case ms := <-m.ServerChan:
-			if ms.Command == Register {
-				m.register(ms.Process, ms.Term)
-			} else {
-				m.unregister(ms.Process, ms.Term)
-			}
-		case line := <-m.ProcessChan:
-			pss := m.search(line)
-			spawnProcess(pss, line)
-		}
+	case line := <-m.ProcessChan:
+		pss := m.search(line)
+		spawnProcess(pss, line)
 	}
+
 }
 
 func spawnProcess(pss []string, line string) {
@@ -59,12 +58,7 @@ func (m Monitor) search(line string) (pss []string) {
 
 //registra um processo que observa um termo
 func (m *Monitor) register(ps string, term string) {
-	pss, exist := m.queue[term]
-
-	if !exist {
-		pss = append(pss, ps)
-		return
-	}
+	pss := m.queue[term]
 
 	for _, p := range pss {
 		if p == ps {
@@ -72,7 +66,7 @@ func (m *Monitor) register(ps string, term string) {
 		}
 	}
 	pss = append(pss, ps)
-
+	m.queue[term] = pss
 }
 
 func (m *Monitor) unregister(ps, term string) {

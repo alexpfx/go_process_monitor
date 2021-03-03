@@ -13,7 +13,7 @@ type Command int
 
 const (
 	Register Command = iota
-	Unregister
+
 )
 
 type Msg struct {
@@ -29,9 +29,10 @@ type Server struct {
 }
 
 func (s Server) Start() (ch chan Msg) {
+	ch = make(chan Msg)
 	route := s.createRoute(ch)
 	go s.serve(s.Port, route)
-	fmt.Printf("iniciando serviço na porta : %d", s.Port)
+	fmt.Printf("iniciando serviço na porta : %d\n", s.Port)
 
 	return
 }

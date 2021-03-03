@@ -7,6 +7,7 @@ import (
 	"github.com/alexpfx/go_process_monitor/util"
 	"github.com/urfave/cli/v2"
 	"strings"
+	"sync"
 
 	"os"
 	"regexp"
@@ -23,14 +24,14 @@ const (
 var eventCmd = make([]string, 0)
 var template = "%s"
 var pattern *regexp.Regexp
-
+var wg sync.WaitGroup
 func main() {
 	app := cli.App{
 
 		Commands: []*cli.Command{
 
 			{
-				Name: "listen",
+				Name: "monitor",
 				Flags: []cli.Flag{
 					&cli.IntFlag{
 						Name:    "port",
@@ -39,7 +40,8 @@ func main() {
 						Value:   7777,
 					},
 					&cli.StringFlag{
-						Name:     "ps",
+						Name:     "process",
+						Aliases: []string{"s"},
 						Usage:    "processo que terá sua saída monitorada",
 						Required: true,
 					},
@@ -47,22 +49,23 @@ func main() {
 						Name:     "auth",
 						Aliases:  []string{"a"},
 						Usage:    "user:pass",
-						Value: "test:test00",
+
 						Required: true,
 					},
 				},
 
 				Action: func(c *cli.Context) error {
+					wg.Add(1)
+
 					auth := strings.Split(c.String("auth"), ":")
 					if len(auth) != 2 {
 						return fmt.Errorf("user e pass são obrigatórios")
 					}
 
-					psSplitted := strings.Split(c.String("ps"), " ")
+					psSplitted := strings.Split(c.String("s"), " ")
 					cmdPath := psSplitted[0]
 					cmdArgs := psSplitted[1:]
 
-					queue := make(map[string]bool)
 					ps := monitor.Process{
 						CmdPath: cmdPath,
 						Args:    cmdArgs,
@@ -78,21 +81,17 @@ func main() {
 
 					srvCh := srv.Start()
 
-					for {
-						select {
-						case psMsg := <-psCh:
-							which := search(queue, psMsg)
-							if which != "" {
-								queue[which] = false
-								fmt.Printf(NoticeColor+"\n", which)
-							} else {
-								//fmt.Println(psMsg)
-							}
-						case srMsg := <-srvCh:
-							queue[srMsg] = !queue[srMsg]
-							fmt.Printf("%v ", queue)
-						}
+					mon := monitor.Monitor{
+						ServerChan:  srvCh,
+						ProcessChan: psCh,
 					}
+
+					go mon.Start()
+
+					wg.Wait()
+
+					return nil
+
 				},
 			},
 		},
