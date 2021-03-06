@@ -12,14 +12,16 @@ import (
 type Command int
 
 const (
-	Register Command = iota
-
+	Register   Command = iota
+	Unregister
+	Quit
 )
 
 type Msg struct {
 	Command Command
 	Process string
 	Term    string
+	Pattern string
 }
 
 type Server struct {
@@ -28,13 +30,10 @@ type Server struct {
 	Pass string
 }
 
-func (s Server) Start() (ch chan Msg) {
-	ch = make(chan Msg)
+func (s Server) Start(ch chan Msg)  {
 	route := s.createRoute(ch)
-	go s.serve(s.Port, route)
+	s.serve(s.Port, route)
 	fmt.Printf("iniciando serviço na porta : %d\n", s.Port)
-
-	return
 }
 
 func (s Server) serve(port int, route *mux.Router) {
@@ -63,23 +62,33 @@ func (s Server) createRoute(ch chan Msg) *mux.Router {
 
 	route := mux.NewRouter()
 
-	route.HandleFunc("/register/{process}/{term}", func(w http.ResponseWriter, r *http.Request) {
-		if !s.checkAuth(r) {
-			authError(w)
-			return
-		}
+	route.Path("/register").
+		Queries("ps", "{ps}").
+		Queries("term", "{term}").
+		Queries("p", "{pattern}").
 
-		params := mux.Vars(r)
-		process := params["process"]
-		term := params["term"]
+		HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !s.checkAuth(r) {
+				authError(w)
+				return
+			}
+			w.WriteHeader(http.StatusAccepted)
+			vs := r.URL.Query()
 
-		ch <- Msg{
-			Command: Register,
-			Process: process,
-			Term:    term,
-		}
+			process := vs.Get("ps")
+			term := vs.Get("term")
+			pattern := vs.Get("p")
 
-	})
+			ch <- Msg{
+				Command: Register,
+				Process: process,
+				Term:    term,
+				Pattern: pattern,
+			}
+
+			msg := "registrando: \nps %s\ntermo: %s\npattern: %s\n"
+			w.Write([]byte(fmt.Sprintf(msg, process, term, pattern)))
+		})
 
 	return route
 }

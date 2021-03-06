@@ -10,21 +10,17 @@ import (
 type Process struct {
 	CmdPath string
 	Args    []string
-
 }
 
-func (p Process) Start() chan string {
-	wrappedArgs := p.Args
-	return start(p.CmdPath, wrappedArgs)
-}
+func (p Process) Start(ch chan string)  {
 
-func start(cmdPath string, args []string) (ch chan string) {
-	ch = make(chan string)
-
-	cmd := exec.Command(cmdPath, args...)
+	cmd := exec.Command(p.CmdPath, p.Args...)
 
 	stdout, err := cmd.StdoutPipe()
+	util.Check(err)
 	scanner := bufio.NewScanner(stdout)
+
+	util.Check(err)
 
 	err = cmd.Start()
 	util.Check(err)
@@ -33,9 +29,12 @@ func start(cmdPath string, args []string) (ch chan string) {
 		for scanner.Scan() {
 			text := scanner.Text()
 			ch <- text
-			time.Sleep(5)
 		}
+		time.Sleep(time.Millisecond * 300)
+		close(ch)
 	}()
 
-	return
+	err = cmd.Wait()
+	util.Check(err)
 }
+

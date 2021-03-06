@@ -2,8 +2,12 @@ package monitor
 
 import (
 	"fmt"
+	"github.com/alexpfx/go_process_monitor/util"
+	"os/exec"
+	"regexp"
 	"strings"
 )
+
 const (
 	InfoColor    = "\033[1;34m%s\033[0m"
 	NoticeColor  = "\033[1;36m%v\033[0m"
@@ -13,82 +17,102 @@ const (
 )
 
 type Monitor struct {
-	ServerChan  chan Msg
-	ProcessChan chan string
-
-	//map[term][]process
-	queue map[string][]string
+	queue map[string][]Msg
 	page  int
 	cache []string
 }
 
-func (m *Monitor) Start() {
-	m.queue = make(map[string][]string)
+func (m *Monitor) Start(srvCh chan Msg, prCh chan string) {
+	m.queue = make(map[string][]Msg)
 	m.cache = make([]string, 0)
-	for {
-		m.monitoring()
-	}
+	m.monitoring(srvCh, prCh)
 }
 
-func (m *Monitor) monitoring() {
+func (m *Monitor) monitoring(srvCh chan Msg, psCh chan string) {
+	for {
+		select {
+		case ms := <-srvCh:
+			switch ms.Command {
+			case Register:
+				m.register(ms)
+			case Unregister:
+				m.unregister(ms)
+			}
+		case line, ok := <-psCh:
+			pss, _ := m.search(line)
 
-	select {
-	case ms := <-m.ServerChan:
-		if ms.Command == Register {
-			m.register(ms.Process, ms.Term)
-		} else {
-			m.unregister(ms.Process, ms.Term)
-		}
-	case line := <-m.ProcessChan:
-		m.page++
-		m.cache = append(m.cache, line)
-		if m.page%20 == 0 {
-			for _, l := range m.cache {
-				fmt.Printf("%s\n", l)
+			fmt.Printf("%.70s ...", line)
+			spawnProcess(pss, line)
+			fmt.Println()
+			if !ok {
+				psCh = nil
 			}
 		}
 
-		pss, t := m.search(line)
-		spawnProcess(pss, line, t)
+		if psCh == nil {
+			break
+		}
+
+	}
+}
+
+func spawnProcess(pss []Msg, line string) {
+	if len(pss) == 0 {
+		return
+	}
+	for _, msg := range pss {
+
+		var extractArgs []string
+		if msg.Pattern != "" {
+			regex := regexp.MustCompile(msg.Pattern)
+			extractArgs = regex.FindAllString(line, -1)
+		}
+
+		split := strings.Split(msg.Process, " ")
+		cmdName := split[0]
+		cmdArgs := split[1:]
+
+		cmd := exec.Command(cmdName, append(cmdArgs, extractArgs...)...)
+
+		output, err := cmd.CombinedOutput()
+		util.Check(err)
+
+		fmt.Printf("%70s", "-> "+string(output))
 	}
 
 }
 
-func spawnProcess(pss []string, line string, t string) {
-	for _, s := range pss {
-		fmt.Printf("Ouvindo termo: %s ps: %s", fmt.Sprintf(InfoColor, t), fmt.Sprintf(NoticeColor, s))
-	}
-}
-
-func (m Monitor) search(line string) (pss []string, t string) {
+func (m Monitor) search(line string) (pss []Msg, found string) {
 	if len(m.queue) == 0 {
 		return
 	}
+
 	for term := range m.queue {
 		if strings.Contains(line, term) {
 			pss = m.queue[term]
-			t = term
-			return
+			found = term
+
+			break
 		}
 	}
 	return
 }
 
 //registra um processo que observa um termo
-func (m *Monitor) register(ps string, term string) {
-	pss := m.queue[term]
+func (m *Monitor) register(msg Msg) {
+	msgs := m.queue[msg.Term]
 
-	for _, p := range pss {
-		if p == ps {
+	for _, m := range msgs {
+		if m.Process == msg.Process {
 			return
 		}
 	}
-	pss = append(pss, ps)
-	m.queue[term] = pss
+	msgs = append(msgs, msg)
+	m.queue[msg.Term] = msgs
 }
 
-func (m *Monitor) unregister(ps, term string) {
-	if _, ok := m.queue[term]; ok {
-		delete(m.queue, ps)
+func (m *Monitor) unregister(msg Msg) {
+	if _, ok := m.queue[msg.Term]; ok {
+		delete(m.queue, msg.Term)
 	}
 }

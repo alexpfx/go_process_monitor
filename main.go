@@ -1,16 +1,14 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"github.com/alexpfx/go_process_monitor/monitor"
 	"github.com/alexpfx/go_process_monitor/util"
 	"github.com/urfave/cli/v2"
-	"strings"
-	"sync"
-
 	"os"
 	"regexp"
+	"strings"
+	"sync"
 )
 
 const (
@@ -25,11 +23,11 @@ var eventCmd = make([]string, 0)
 var template = "%s"
 var pattern *regexp.Regexp
 var wg sync.WaitGroup
+
 func main() {
 	app := cli.App{
 
 		Commands: []*cli.Command{
-
 			{
 				Name: "monitor",
 				Flags: []cli.Flag{
@@ -37,25 +35,24 @@ func main() {
 						Name:    "port",
 						Aliases: []string{"p"},
 						Usage:   "porta onde deve esperar conexões http",
-						Value:   7777,
+						Value:   7003,
 					},
 					&cli.StringFlag{
 						Name:     "process",
-						Aliases: []string{"s"},
+						Aliases:  []string{"s"},
 						Usage:    "processo que terá sua saída monitorada",
 						Required: true,
 					},
 					&cli.StringFlag{
-						Name:     "auth",
-						Aliases:  []string{"a"},
-						Usage:    "user:pass",
+						Name:    "auth",
+						Aliases: []string{"a"},
+						Usage:   "user:pass",
 
 						Required: true,
 					},
 				},
 
 				Action: func(c *cli.Context) error {
-					wg.Add(1)
 
 					auth := strings.Split(c.String("auth"), ":")
 					if len(auth) != 2 {
@@ -71,7 +68,10 @@ func main() {
 						Args:    cmdArgs,
 					}
 
-					psCh := ps.Start()
+					psCh := make(chan string)
+					go func() {
+						ps.Start(psCh)
+					}()
 
 					srv := monitor.Server{
 						Port: c.Int("port"),
@@ -79,19 +79,15 @@ func main() {
 						Pass: auth[1],
 					}
 
-					srvCh := srv.Start()
+					srvCh := make(chan monitor.Msg)
+					go func() {
+						srv.Start(srvCh)
+					}()
 
-					mon := monitor.Monitor{
-						ServerChan:  srvCh,
-						ProcessChan: psCh,
-					}
+					mon := monitor.Monitor{}
 
-					go mon.Start()
-
-					wg.Wait()
-
+					mon.Start(srvCh, psCh)
 					return nil
-
 				},
 			},
 		},
@@ -99,9 +95,6 @@ func main() {
 
 	err := app.Run(os.Args)
 	util.Check(err)
-
-	input := bufio.NewScanner(os.Stdin)
-	input.Scan()
 
 }
 
