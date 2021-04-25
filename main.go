@@ -50,10 +50,14 @@ func main() {
 
 						Required: true,
 					},
+					&cli.StringFlag{
+						Name: "register",
+						Aliases: []string{"r"},
+						Usage: "path de arquivo json que contém listeners que devem ser pré registrados",
+					},
 				},
 
 				Action: func(c *cli.Context) error {
-
 					auth := strings.Split(c.String("auth"), ":")
 					if len(auth) != 2 {
 						return fmt.Errorf("user e pass são obrigatórios")
@@ -68,18 +72,15 @@ func main() {
 						Args:    cmdArgs,
 					}
 
-					psCh := make(chan string)
-					go func() {
-						ps.Start(psCh)
-					}()
+					psCh := ps.Start()
 
-					srv := monitor.Server{
+					srv := monitor.OldServer{
 						Port: c.Int("port"),
 						User: auth[0],
 						Pass: auth[1],
 					}
 
-					srvCh := make(chan monitor.Msg)
+					srvCh := make(chan monitor.Observer)
 					go func() {
 						srv.Start(srvCh)
 					}()
@@ -87,6 +88,7 @@ func main() {
 					mon := monitor.Monitor{}
 
 					mon.Start(srvCh, psCh)
+
 					return nil
 				},
 			},

@@ -1,0 +1,32 @@
+syntax = "proto3";
+option go_package = "./pb";
+package ps_monitor;
+
+message Event{
+	int64 time = 1;
+	string text = 2;
+	bool match = 3;
+}
+
+message ConfigChange{
+	string pattern = 1;
+	bool receiveOutput = 2;
+}
+
+message ConfigRequest {
+	oneof payload{		
+		string pipeName = 1;
+		ConfigChange config = 2;
+	}
+}
+
+message ConfigOnceRequest{
+	string pipeName = 1;
+	ConfigChange config = 2;
+}
+
+service ProcessMonitor{
+	rpc Run (stream ConfigRequest) returns (stream Event);
+	rpc RunOnce (ConfigOnceRequest) returns (stream Event);
+}
+

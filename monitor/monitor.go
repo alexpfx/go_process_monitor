@@ -17,18 +17,18 @@ const (
 )
 
 type Monitor struct {
-	queue map[string][]Msg
+	queue map[string][]Observer
 	page  int
 	cache []string
 }
 
-func (m *Monitor) Start(srvCh chan Msg, prCh chan string) {
-	m.queue = make(map[string][]Msg)
+func (m *Monitor) Start(srvCh chan Observer, prCh chan string) {
+	m.queue = make(map[string][]Observer)
 	m.cache = make([]string, 0)
 	m.monitoring(srvCh, prCh)
 }
 
-func (m *Monitor) monitoring(srvCh chan Msg, psCh chan string) {
+func (m *Monitor) monitoring(srvCh chan Observer, psCh chan string) {
 	for {
 		select {
 		case ms := <-srvCh:
@@ -56,7 +56,7 @@ func (m *Monitor) monitoring(srvCh chan Msg, psCh chan string) {
 	}
 }
 
-func spawnProcess(pss []Msg, line string) {
+func spawnProcess(pss []Observer, line string) {
 	if len(pss) == 0 {
 		return
 	}
@@ -82,7 +82,7 @@ func spawnProcess(pss []Msg, line string) {
 
 }
 
-func (m Monitor) search(line string) (pss []Msg, found string) {
+func (m Monitor) search(line string) (pss []Observer, found string) {
 	if len(m.queue) == 0 {
 		return
 	}
@@ -99,7 +99,7 @@ func (m Monitor) search(line string) (pss []Msg, found string) {
 }
 
 //registra um processo que observa um termo
-func (m *Monitor) register(msg Msg) {
+func (m *Monitor) register(msg Observer) {
 	msgs := m.queue[msg.Term]
 
 	for _, m := range msgs {
@@ -111,7 +111,7 @@ func (m *Monitor) register(msg Msg) {
 	m.queue[msg.Term] = msgs
 }
 
-func (m *Monitor) unregister(msg Msg) {
+func (m *Monitor) unregister(msg Observer) {
 	if _, ok := m.queue[msg.Term]; ok {
 		delete(m.queue, msg.Term)
 	}

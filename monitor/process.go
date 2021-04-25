@@ -12,8 +12,8 @@ type Process struct {
 	Args    []string
 }
 
-func (p Process) Start(ch chan string)  {
-
+func (p Process) Start() chan string{
+	ch := make(chan string)
 	cmd := exec.Command(p.CmdPath, p.Args...)
 
 	stdout, err := cmd.StdoutPipe()
@@ -36,5 +36,6 @@ func (p Process) Start(ch chan string)  {
 
 	err = cmd.Wait()
 	util.Check(err)
+	return ch
 }
 
