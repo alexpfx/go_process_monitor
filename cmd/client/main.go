@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/alexpfx/go_process_monitor/internal/client"
 	"github.com/alexpfx/go_process_monitor/pb"
 	"github.com/urfave/cli/v2"
 	"google.golang.org/grpc"
@@ -29,9 +30,27 @@ func main() {
 				Aliases: []string{"a"},
 			},
 		},
+		Commands: []*cli.Command{
+			{
+				Name: "ps",
+				Action: func(c *cli.Context) error {
+					if c.NArg() < 1 {
+						return fmt.Errorf("usage:\n ps cmd [args...]")
+					}
+					cmd := c.Args().First()
+					args := c.Args().Tail()
+					host := c.String("host")
+					port := c.Int("port")
+
+					psCli := client.NewExecPs(host, port, cmd, args)
+					return psCli.Run()
+				},
+			},
+		},
 		Action: func(ctx *cli.Context) error {
 			if ctx.NArg() < 2 {
-				return fmt.Errorf("argumento faltante. Uso:\n client [OPTIONS...] <pipe_file> <pattern>")
+				return cli.ShowAppHelp(ctx)
+				//return fmt.Errorf("argumento faltante. Uso:\n client [OPTIONS...] <pipe_file> <pattern>")
 			}
 
 			host := ctx.String("host")

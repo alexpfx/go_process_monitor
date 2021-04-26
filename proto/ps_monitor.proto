@@ -20,12 +20,23 @@ message ConfigRequest {
 	}
 }
 
+message ExecProcessRequest{
+	string cmdPath = 1;
+	string args = 2;
+}
+
+message ExecProcessResponse{
+	string filePath = 1;
+}
+
+
 message ConfigOnceRequest{
 	string pipeName = 1;
 	ConfigChange config = 2;
 }
 
 service ProcessMonitor{
+	rpc ExecProcess(ExecProcessRequest) returns (ExecProcessResponse);
 	rpc Run (stream ConfigRequest) returns (stream Event);
 	rpc RunOnce (ConfigOnceRequest) returns (stream Event);
 }

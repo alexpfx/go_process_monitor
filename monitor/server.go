@@ -2,14 +2,17 @@ package monitor
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"github.com/alexpfx/go_process_monitor/pb"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/peer"
 	"io"
+	"io/ioutil"
 	"log"
 	"net"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"syscall"
@@ -22,6 +25,31 @@ type server struct {
 	dir     string
 }
 
+func (s *server) ExecProcess(ctx context.Context, request *pb.ExecProcessRequest) (*pb.ExecProcessResponse, error) {
+	tmpDir, err := ioutil.TempDir(s.dir, "pm-")
+	if err != nil {
+		return nil, err
+	}
+	pipeFilePath := filepath.Join(tmpDir, filepath.Base(request.GetCmdPath()))
+
+	if err := syscall.Mkfifo(pipeFilePath, 0755); err != nil && !os.IsExist(err) {
+		return nil, err
+	}
+
+	file, _ := os.OpenFile(pipeFilePath, os.O_RDWR, 0600)
+	defer file.Close()
+
+	cmd := exec.Command(request.GetCmdPath(), strings.Split(request.GetArgs(), " ")...)
+
+	cmd.Stdout = file
+
+	err = cmd.Start()
+	if err != nil {
+		return nil, err
+	}
+	return &pb.ExecProcessResponse{FilePath: pipeFilePath}, nil
+}
+
 func (s *server) RunOnce(request *pb.ConfigOnceRequest, stream pb.ProcessMonitor_RunOnceServer) error {
 	pipeName := request.PipeName
 	cfg := request.Config
@@ -31,12 +59,12 @@ func (s *server) RunOnce(request *pb.ConfigOnceRequest, stream pb.ProcessMonitor
 	}
 
 	ch, err := openPipe(s.dir, pipeName)
-	if err != nil{
+	if err != nil {
 		return err
 	}
 
-	for msg := range ch{
-		if ev, shouldSend := buildEvent(cfg, msg); shouldSend{
+	for msg := range ch {
+		if ev, shouldSend := buildEvent(cfg, msg); shouldSend {
 			_ = stream.Send(ev)
 		}
 	}
