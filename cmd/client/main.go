@@ -1,105 +1,51 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"github.com/alexpfx/go_process_monitor/internal/client"
-	"github.com/alexpfx/go_process_monitor/pb"
 	"github.com/urfave/cli/v2"
-	"google.golang.org/grpc"
-	"io"
-	"log"
 	"os"
 )
+
+var host string
+var port int
+var pattern string
 
 func main() {
 	app := &cli.App{
 		Flags: []cli.Flag{
 			&cli.IntFlag{
-				Name:    "port",
-				Aliases: []string{"p"},
-				Value:   50051,
+				Name:        "port",
+				Aliases:     []string{"p"},
+				Value:       50051,
+				Destination: &port,
 			},
 			&cli.StringFlag{
-				Name:    "host",
-				Aliases: []string{"u"},
-				Value:   "0.0.0.0",
+				Name:        "host",
+				Aliases:     []string{"u"},
+				Value:       "0.0.0.0",
+				Destination: &host,
 			},
-			&cli.BoolFlag{
-				Name:    "all_msgs",
-				Aliases: []string{"a"},
-			},
-		},
-		Commands: []*cli.Command{
-			{
-				Name: "ps",
-				Action: func(c *cli.Context) error {
-					if c.NArg() < 1 {
-						return fmt.Errorf("usage:\n ps cmd [args...]")
-					}
-					cmd := c.Args().First()
-					args := c.Args().Tail()
-					host := c.String("host")
-					port := c.Int("port")
-
-					psCli := client.NewExecPs(host, port, cmd, args)
-					return psCli.Run()
-				},
+			&cli.StringFlag{
+				Name:        "pattern",
+				Aliases:     []string{"s"},
+				Required:    true,
+				Destination: &pattern,
 			},
 		},
-		Action: func(ctx *cli.Context) error {
-			if ctx.NArg() < 2 {
-				return cli.ShowAppHelp(ctx)
-				//return fmt.Errorf("argumento faltante. Uso:\n client [OPTIONS...] <pipe_file> <pattern>")
+		Action: func(c *cli.Context) error {
+			if c.NArg() < 1 {
+				return fmt.Errorf("usage:\n ps cmd [args...]")
 			}
+			cmd := c.Args().First()
+			args := c.Args().Tail()
 
-			host := ctx.String("host")
-			port := ctx.Int("port")
-			url := fmt.Sprintf("%s:%d", host, port)
-			allMsgs := ctx.Bool("all_msgs")
-
-			pipeFile := ctx.Args().Get(0)
-			pattern := ctx.Args().Get(1)
-
-			conn, err := grpc.Dial(url, grpc.WithInsecure())
-			if err != nil {
-				log.Fatalf("não pode conectar ao serviço: %s %s", url, err.Error())
-			}
-
-			defer conn.Close()
-
-			client := pb.NewProcessMonitorClient(conn)
-
-			stream, err := client.RunOnce(context.Background(), &pb.ConfigOnceRequest{
-				PipeName: pipeFile,
-				Config: &pb.ConfigChange{
-					Pattern:       pattern,
-					ReceiveOutput: allMsgs,
-				},
-			})
-
-			if err != nil {
-				return err
-			}
-			for {
-				event, err := stream.Recv()
-				if err == io.EOF {
-					return nil
-				}
-				if err != nil {
-					return err
-				}
-				fmt.Println("received event: ")
-				fmt.Printf("time %v, text %s, match %v", event.Time, event.Text, event.Match)
-			}
-
-			return nil
+			err := client.StartAndListen(host, port, cmd, args, pattern)
+			return err
 		},
 	}
-
 	err := app.Run(os.Args)
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
 	}
-
 }

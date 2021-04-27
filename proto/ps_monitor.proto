@@ -8,36 +8,15 @@ message Event{
 	bool match = 3;
 }
 
-message ConfigChange{
-	string pattern = 1;
-	bool receiveOutput = 2;
-}
 
-message ConfigRequest {
-	oneof payload{		
-		string pipeName = 1;
-		ConfigChange config = 2;
-	}
-}
-
-message ExecProcessRequest{
+message ProcessMonitorRequest{
 	string cmdPath = 1;
 	string args = 2;
-}
-
-message ExecProcessResponse{
-	string filePath = 1;
-}
-
-
-message ConfigOnceRequest{
-	string pipeName = 1;
-	ConfigChange config = 2;
+	string pattern = 3;
+	bool receiveOutput = 4;
 }
 
 service ProcessMonitor{
-	rpc ExecProcess(ExecProcessRequest) returns (ExecProcessResponse);
-	rpc Run (stream ConfigRequest) returns (stream Event);
-	rpc RunOnce (ConfigOnceRequest) returns (stream Event);
+	rpc StartProcess (ProcessMonitorRequest) returns (stream Event);
 }
 
