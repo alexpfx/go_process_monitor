@@ -2,190 +2,70 @@ package monitor
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"github.com/alexpfx/go_process_monitor/pb"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/peer"
 	"io"
-	"io/ioutil"
-	"log"
 	"net"
-	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
-	"syscall"
 	"time"
 )
 
+type Server interface {
+	Start()
+}
+
 type server struct {
-	address string
-	port    int
-	dir     string
+	host string
+	port int
 }
 
-func (s *server) ExecProcess(ctx context.Context, request *pb.ExecProcessRequest) (*pb.ExecProcessResponse, error) {
-	tmpDir, err := ioutil.TempDir(s.dir, "pm-")
-	if err != nil {
-		return nil, err
-	}
-	pipeFilePath := filepath.Join(tmpDir, filepath.Base(request.GetCmdPath()))
+func (s *server) StartProcess(req *pb.ProcessMonitorRequest, stream pb.ProcessMonitor_StartProcessServer) error {
+	pattern := req.GetPattern()
+	_ = req.GetReceiveOutput()
 
-	if err := syscall.Mkfifo(pipeFilePath, 0755); err != nil && !os.IsExist(err) {
-		return nil, err
-	}
-
-	file, _ := os.OpenFile(pipeFilePath, os.O_RDWR, 0600)
-	defer file.Close()
-
-	cmd := exec.Command(request.GetCmdPath(), strings.Split(request.GetArgs(), " ")...)
-
-	cmd.Stdout = file
-
-	err = cmd.Start()
-	if err != nil {
-		return nil, err
-	}
-	return &pb.ExecProcessResponse{FilePath: pipeFilePath}, nil
-}
-
-func (s *server) RunOnce(request *pb.ConfigOnceRequest, stream pb.ProcessMonitor_RunOnceServer) error {
-	pipeName := request.PipeName
-	cfg := request.Config
-
-	if p, ok := peer.FromContext(stream.Context()); ok {
-		log.Printf("cliente conectado: %s", p.Addr)
-	}
-
-	ch, err := openPipe(s.dir, pipeName)
-	if err != nil {
-		return err
-	}
-
-	for msg := range ch {
-		if ev, shouldSend := buildEvent(cfg, msg); shouldSend {
-			_ = stream.Send(ev)
-		}
-	}
-	return nil
-}
-
-func (s *server) Run(stream pb.ProcessMonitor_RunServer) error {
-	if p, ok := peer.FromContext(stream.Context()); ok {
-		log.Printf("cliente conectado: %s", p.Addr)
-	}
-	recv, err := stream.Recv()
-	if err != nil {
-		return err
-	}
-	pipeName := recv.GetPipeName()
-	ch, err := openPipe(s.dir, pipeName)
-	if err != nil {
-		return err
-	}
-	changes := configChanges(stream)
-
-	cfg := pb.ConfigChange{}
-	select {
-	case msg := <-ch:
-		if ev, shouldSend := buildEvent(&cfg, msg); shouldSend {
-			_ = stream.Send(ev)
-		}
-	case ncf := <-changes:
-		cfg = pb.ConfigChange{
-			Pattern:       ncf.Pattern,
-			ReceiveOutput: ncf.ReceiveOutput,
-		}
-	}
-	return nil
-}
-
-func buildEvent(cfg *pb.ConfigChange, msg string) (*pb.Event, bool) {
-	pattern := cfg.Pattern
-	rcvOut := cfg.ReceiveOutput
-	if pattern == "" {
-		return nil, false
-	}
-	ev := &pb.Event{
-		Time:  time.Now().Unix(),
-		Text:  msg,
-		Match: strings.Contains(msg, pattern),
-	}
-
-	if rcvOut {
-		return ev, true
-	}
-	return ev, ev.Match
-}
-
-func configChanges(stream pb.ProcessMonitor_RunServer) chan *pb.ConfigChange {
-	ch := make(chan *pb.ConfigChange)
-	go func() {
-		for {
-			recv, err := stream.Recv()
-			if err == io.EOF {
-				close(ch)
-				break
-			}
-			if err != nil {
-				close(ch)
-				log.Fatal(err)
-			}
-			newCfg := recv.GetConfig()
-			ch <- &pb.ConfigChange{
-				Pattern:       newCfg.Pattern,
-				ReceiveOutput: newCfg.ReceiveOutput,
-			}
-		}
-	}()
-	return ch
-}
-
-func openPipe(dir string, name string) (chan string, error) {
-	ch := make(chan string)
-	filePath := filepath.Join(dir, name)
-	pipeFile, err := os.OpenFile(filePath, os.O_RDONLY|syscall.O_NONBLOCK, 0600)
-	if err != nil {
-		return nil, err
-	}
-	scanner := bufio.NewScanner(pipeFile)
+	cmd := exec.Command(req.GetCmdPath(), req.GetArgs())
+	pr, pw := io.Pipe()
+	cmd.Stdout = pw
+	scanner := bufio.NewScanner(pr)
 	go func() {
 		for scanner.Scan() {
 			text := scanner.Text()
-			ch <- text
+
+			if strings.Contains(text, pattern) {
+				err := stream.Send(&pb.Event{
+					Time:  time.Now().Unix(),
+					Text:  text,
+					Match: true,
+				})
+				if err != nil {
+					return
+				}
+			}
 		}
 	}()
 
-	return ch, nil
-}
-
-func NewServer(address string, port int, dir string) Server {
-	return &server{
-		address: address,
-		port:    port,
-		dir:     dir,
-	}
-}
-
-func (s *server) Start() {
-	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%d", s.address, s.port))
+	err := cmd.Run()
 	if err != nil {
-		log.Fatalf("Não pode iniciar o servidor [%s:%d]: %v",
-			s.address, s.port, err)
+		return err
 	}
-
-	grpcServer := grpc.NewServer()
-
-	pb.RegisterProcessMonitorServer(grpcServer, &server{})
-
-	if err := grpcServer.Serve(lis); err != nil {
-		log.Fatalf("Não pode iniciar o servidor [%s:%d]: %v",
-			s.address, s.port, err)
-	}
-
+	return nil
 }
 
-type Server interface {
-	Start()
+func RunServer(host string, port int) error {
+	address := fmt.Sprintf("%s:%d", host, port)
+	lis, err := net.Listen("tcp", address)
+	if err != nil {
+		return fmt.Errorf("não pode iniciar o servidor [%s]: %v",
+			address, err)
+
+	}
+	grpcServer := grpc.NewServer()
+	pb.RegisterProcessMonitorServer(grpcServer, &server{})
+	if err = grpcServer.Serve(lis); err != nil {
+		return fmt.Errorf("não pode iniciar o servidor [%s]: %v",
+			address, err)
+	}
+	return nil
 }

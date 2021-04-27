@@ -8,30 +8,35 @@ import (
 	"path/filepath"
 )
 
+var host string
+var port int
+var dir string
+
 func main() {
 	homeDir, _ := os.UserHomeDir()
 	app := &cli.App{
 		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "host",
+				Aliases:     []string{"u"},
+				Value:       "0.0.0.0",
+				Destination: &host,
+			},
 			&cli.IntFlag{
-				Name:    "port",
-				Aliases: []string{"p"},
-				Value:   50051,
+				Name:        "port",
+				Aliases:     []string{"p"},
+				Value:       50051,
+				Destination: &port,
 			},
 			&cli.StringFlag{
-				Name:    "host",
-				Aliases: []string{"u"},
-				Value:   "0.0.0.0",
+				Name:        "dir",
+				Aliases:     []string{"d"},
+				Value:       filepath.Join(homeDir, ".cache/"),
+				Destination: &dir,
 			},
-			&cli.StringFlag{Name: "dir", Aliases: []string{"d"},
-				Value: filepath.Join(homeDir, ".cache")},
 		},
 		Action: func(ctx *cli.Context) error {
-			port := ctx.Int("port")
-			host := ctx.String("host")
-			dir := ctx.String("dir")
-
-			runServer(host, port, dir)
-			return nil
+			return monitor.RunServer(host, port)
 		},
 	}
 
@@ -39,9 +44,4 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func runServer(host string, port int, dir string) {
-	server := monitor.NewServer(host, port, dir)
-	server.Start()
 }
