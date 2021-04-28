@@ -3,20 +3,26 @@ option go_package = "./pb";
 package ps_monitor;
 
 message Event{
-	int64 time = 1;
-	string text = 2;
-	bool match = 3;
+  int64 time = 1;
+  string text = 2;
+  bool match = 3;
 }
-
-
+message Process{
+  string cmdPath = 1;
+  string args = 2;
+}
+message Filter{
+  string pattern = 1;
+  bool receiveOutput = 2;
+}
 message ProcessMonitorRequest{
-	string cmdPath = 1;
-	string args = 2;
-	string pattern = 3;
-	bool receiveOutput = 4;
+  oneof payload{
+    Process process = 1;
+    Filter filter = 2;
+  }
 }
 
 service ProcessMonitor{
-	rpc StartProcess (ProcessMonitorRequest) returns (stream Event);
+  rpc StartProcess (stream ProcessMonitorRequest) returns (stream Event);
 }
 
