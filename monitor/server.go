@@ -21,36 +21,100 @@ type server struct {
 	port int
 }
 
-func (s *server) StartProcess(req *pb.ProcessMonitorRequest, stream pb.ProcessMonitor_StartProcessServer) error {
-	pattern := req.GetPattern()
-	_ = req.GetReceiveOutput()
-
-	cmd := exec.Command(req.GetCmdPath(), req.GetArgs())
-	pr, pw := io.Pipe()
-	cmd.Stdout = pw
-	scanner := bufio.NewScanner(pr)
-	go func() {
-		for scanner.Scan() {
-			text := scanner.Text()
-
-			if strings.Contains(text, pattern) {
-				err := stream.Send(&pb.Event{
-					Time:  time.Now().Unix(),
-					Text:  text,
-					Match: true,
-				})
-				if err != nil {
-					return
-				}
-			}
-		}
-	}()
-
-	err := cmd.Run()
+func (s *server) StartProcess(stream pb.ProcessMonitor_StartProcessServer) error {
+	psChan, filterChan, err := splitRecv(stream)
 	if err != nil {
 		return err
 	}
+	ps := <-psChan
+
+	cmd := exec.Command(ps.CmdPath, ps.Args)
+	ch, qch, err := handleCmd(cmd, filterChan)
+	if err != nil {
+		return err
+	}
+
+	for {
+		select {
+		case msg := <-ch:
+			fmt.Println(msg)
+		case q := <-qch:
+			fmt.Println(q)
+		default:
+		}
+	}
 	return nil
+}
+
+func handleCmd(cmd *exec.Cmd, filter chan *pb.Filter) (chan *pb.Event, chan bool, error) {
+	ch := make(chan *pb.Event)
+	quitCh := make(chan bool)
+
+	r, w := io.Pipe()
+	cmd.Stdout = w
+	scanner := bufio.NewScanner(r)
+	var f *pb.Filter
+
+	go func() {
+		for {
+			ff := <-filter
+			f = ff
+			fmt.Println(f)
+		}
+	}()
+	go func() {
+		for scanner.Scan() {
+			text := scanner.Text()
+			if f == nil {
+				continue
+			}
+			fmt.Println(text)
+			if strings.Contains(text, f.Pattern) {
+				ch <- &pb.Event{
+					Time:  time.Now().Unix(),
+					Text:  text,
+					Match: true,
+				}
+				return
+			}
+			if !f.ReceiveOutput {
+				continue
+			}
+			ch <- &pb.Event{
+				Time:  time.Now().Unix(),
+				Text:  text,
+				Match: true,
+			}
+			return
+		}
+	}()
+	return ch, quitCh, nil
+}
+
+func splitRecv(stream pb.ProcessMonitor_StartProcessServer) (chan *pb.Process, chan *pb.Filter, error) {
+	chp := make(chan *pb.Process)
+	chf := make(chan *pb.Filter)
+
+	go func() {
+		for {
+			recv, err := stream.Recv()
+			if err == io.EOF {
+				close(chp)
+				close(chf)
+			}
+			if err != nil {
+				return
+			}
+
+			switch recv.Payload.(type) {
+			case *pb.ProcessMonitorRequest_Process:
+				chp <- recv.GetProcess()
+			case *pb.ProcessMonitorRequest_Filter:
+				chf <- recv.GetFilter()
+			}
+		}
+	}()
+	return chp, chf, nil
 }
 
 func RunServer(host string, port int) error {
