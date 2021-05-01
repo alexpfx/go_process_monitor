@@ -3,7 +3,8 @@ package main
 import (
 	"fmt"
 	"github.com/alexpfx/go_process_monitor/internal/client"
-	"github.com/urfave/cli/v2"
+	"github.com/uMrfave/cli/v2"
+	"log"
 	"os"
 )
 
@@ -46,6 +47,6 @@ func main() {
 	}
 	err := app.Run(os.Args)
 	if err != nil {
-		fmt.Println(err)
+		log.Fatalln(err)
 	}
 }

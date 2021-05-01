@@ -16,13 +16,35 @@ message Filter{
   bool receiveOutput = 2;
 }
 message ProcessMonitorRequest{
-  oneof payload{
+  oneof msg{
     Process process = 1;
     Filter filter = 2;
   }
 }
 
+message ProcessRequest {
+	oneof msg{
+		uint64 keyId = 1;
+		Process process = 2;
+	}	
+}
+
+message SubscribeRequest{
+	uint64 keyId = 1;
+	repeated string terms = 2;
+}
+
+
+message ProcessResponse{
+	uint64 keyId = 1;		
+}
+message SubscribeResponse{
+	Event event = 1;	
+}
+
 service ProcessMonitor{
   rpc StartProcess (stream ProcessMonitorRequest) returns (stream Event);
+  rpc PrepareProcess (ProcessRequest) returns (ProcessResponse);
+  rpc Subscribe (SubscribeRequest) returns (stream SubscribeResponse);
 }
 

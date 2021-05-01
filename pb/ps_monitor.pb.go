@@ -202,10 +202,10 @@ type ProcessMonitorRequest struct {
 	sizeCache     protoimpl.SizeCache
 	unknownFields protoimpl.UnknownFields
 
-	// Types that are assignable to Payload:
+	// Types that are assignable to Msg:
 	//	*ProcessMonitorRequest_Process
 	//	*ProcessMonitorRequest_Filter
-	Payload isProcessMonitorRequest_Payload `protobuf_oneof:"payload"`
+	Msg isProcessMonitorRequest_Msg `protobuf_oneof:"msg"`
 }
 
 func (x *ProcessMonitorRequest) Reset() {
@@ -240,29 +240,29 @@ func (*ProcessMonitorRequest) Descriptor() ([]byte, []int) {
 	return file_proto_ps_monitor_proto_rawDescGZIP(), []int{3}
 }
 
-func (m *ProcessMonitorRequest) GetPayload() isProcessMonitorRequest_Payload {
+func (m *ProcessMonitorRequest) GetMsg() isProcessMonitorRequest_Msg {
 	if m != nil {
-		return m.Payload
+		return m.Msg
 	}
 	return nil
 }
 
 func (x *ProcessMonitorRequest) GetProcess() *Process {
-	if x, ok := x.GetPayload().(*ProcessMonitorRequest_Process); ok {
+	if x, ok := x.GetMsg().(*ProcessMonitorRequest_Process); ok {
 		return x.Process
 	}
 	return nil
 }
 
 func (x *ProcessMonitorRequest) GetFilter() *Filter {
-	if x, ok := x.GetPayload().(*ProcessMonitorRequest_Filter); ok {
+	if x, ok := x.GetMsg().(*ProcessMonitorRequest_Filter); ok {
 		return x.Filter
 	}
 	return nil
 }
 
-type isProcessMonitorRequest_Payload interface {
-	isProcessMonitorRequest_Payload()
+type isProcessMonitorRequest_Msg interface {
+	isProcessMonitorRequest_Msg()
 }
 
 type ProcessMonitorRequest_Process struct {
@@ -273,9 +273,238 @@ type ProcessMonitorRequest_Filter struct {
 	Filter *Filter `protobuf:"bytes,2,opt,name=filter,proto3,oneof"`
 }
 
-func (*ProcessMonitorRequest_Process) isProcessMonitorRequest_Payload() {}
+func (*ProcessMonitorRequest_Process) isProcessMonitorRequest_Msg() {}
 
-func (*ProcessMonitorRequest_Filter) isProcessMonitorRequest_Payload() {}
+func (*ProcessMonitorRequest_Filter) isProcessMonitorRequest_Msg() {}
+
+type ProcessRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	// Types that are assignable to Msg:
+	//	*ProcessRequest_KeyId
+	//	*ProcessRequest_Process
+	Msg isProcessRequest_Msg `protobuf_oneof:"msg"`
+}
+
+func (x *ProcessRequest) Reset() {
+	*x = ProcessRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_ps_monitor_proto_msgTypes[4]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ProcessRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProcessRequest) ProtoMessage() {}
+
+func (x *ProcessRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_ps_monitor_proto_msgTypes[4]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProcessRequest.ProtoReflect.Descriptor instead.
+func (*ProcessRequest) Descriptor() ([]byte, []int) {
+	return file_proto_ps_monitor_proto_rawDescGZIP(), []int{4}
+}
+
+func (m *ProcessRequest) GetMsg() isProcessRequest_Msg {
+	if m != nil {
+		return m.Msg
+	}
+	return nil
+}
+
+func (x *ProcessRequest) GetKeyId() uint64 {
+	if x, ok := x.GetMsg().(*ProcessRequest_KeyId); ok {
+		return x.KeyId
+	}
+	return 0
+}
+
+func (x *ProcessRequest) GetProcess() *Process {
+	if x, ok := x.GetMsg().(*ProcessRequest_Process); ok {
+		return x.Process
+	}
+	return nil
+}
+
+type isProcessRequest_Msg interface {
+	isProcessRequest_Msg()
+}
+
+type ProcessRequest_KeyId struct {
+	KeyId uint64 `protobuf:"varint,1,opt,name=keyId,proto3,oneof"`
+}
+
+type ProcessRequest_Process struct {
+	Process *Process `protobuf:"bytes,2,opt,name=process,proto3,oneof"`
+}
+
+func (*ProcessRequest_KeyId) isProcessRequest_Msg() {}
+
+func (*ProcessRequest_Process) isProcessRequest_Msg() {}
+
+type SubscribeRequest struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	KeyId uint64   `protobuf:"varint,1,opt,name=keyId,proto3" json:"keyId,omitempty"`
+	Terms []string `protobuf:"bytes,2,rep,name=terms,proto3" json:"terms,omitempty"`
+}
+
+func (x *SubscribeRequest) Reset() {
+	*x = SubscribeRequest{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_ps_monitor_proto_msgTypes[5]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SubscribeRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeRequest) ProtoMessage() {}
+
+func (x *SubscribeRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_ps_monitor_proto_msgTypes[5]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeRequest.ProtoReflect.Descriptor instead.
+func (*SubscribeRequest) Descriptor() ([]byte, []int) {
+	return file_proto_ps_monitor_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *SubscribeRequest) GetKeyId() uint64 {
+	if x != nil {
+		return x.KeyId
+	}
+	return 0
+}
+
+func (x *SubscribeRequest) GetTerms() []string {
+	if x != nil {
+		return x.Terms
+	}
+	return nil
+}
+
+type ProcessResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	KeyId uint64 `protobuf:"varint,1,opt,name=keyId,proto3" json:"keyId,omitempty"`
+}
+
+func (x *ProcessResponse) Reset() {
+	*x = ProcessResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_ps_monitor_proto_msgTypes[6]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *ProcessResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ProcessResponse) ProtoMessage() {}
+
+func (x *ProcessResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_ps_monitor_proto_msgTypes[6]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ProcessResponse.ProtoReflect.Descriptor instead.
+func (*ProcessResponse) Descriptor() ([]byte, []int) {
+	return file_proto_ps_monitor_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ProcessResponse) GetKeyId() uint64 {
+	if x != nil {
+		return x.KeyId
+	}
+	return 0
+}
+
+type SubscribeResponse struct {
+	state         protoimpl.MessageState
+	sizeCache     protoimpl.SizeCache
+	unknownFields protoimpl.UnknownFields
+
+	Event *Event `protobuf:"bytes,1,opt,name=event,proto3" json:"event,omitempty"`
+}
+
+func (x *SubscribeResponse) Reset() {
+	*x = SubscribeResponse{}
+	if protoimpl.UnsafeEnabled {
+		mi := &file_proto_ps_monitor_proto_msgTypes[7]
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		ms.StoreMessageInfo(mi)
+	}
+}
+
+func (x *SubscribeResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SubscribeResponse) ProtoMessage() {}
+
+func (x *SubscribeResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_proto_ps_monitor_proto_msgTypes[7]
+	if protoimpl.UnsafeEnabled && x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SubscribeResponse.ProtoReflect.Descriptor instead.
+func (*SubscribeResponse) Descriptor() ([]byte, []int) {
+	return file_proto_ps_monitor_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *SubscribeResponse) GetEvent() *Event {
+	if x != nil {
+		return x.Event
+	}
+	return nil
+}
 
 var File_proto_ps_monitor_proto protoreflect.FileDescriptor
 
@@ -294,22 +523,48 @@ var file_proto_ps_monitor_proto_rawDesc = []byte{
 	0x0a, 0x07, 0x70, 0x61, 0x74, 0x74, 0x65, 0x72, 0x6e, 0x18, 0x01, 0x20, 0x01, 0x28, 0x09, 0x52,
 	0x07, 0x70, 0x61, 0x74, 0x74, 0x65, 0x72, 0x6e, 0x12, 0x24, 0x0a, 0x0d, 0x72, 0x65, 0x63, 0x65,
 	0x69, 0x76, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x18, 0x02, 0x20, 0x01, 0x28, 0x08, 0x52,
-	0x0d, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x22, 0x81,
-	0x01, 0x0a, 0x15, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4d, 0x6f, 0x6e, 0x69, 0x74, 0x6f,
-	0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2f, 0x0a, 0x07, 0x70, 0x72, 0x6f, 0x63,
-	0x65, 0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x70, 0x73, 0x5f, 0x6d,
-	0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x48, 0x00,
-	0x52, 0x07, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x12, 0x2c, 0x0a, 0x06, 0x66, 0x69, 0x6c,
-	0x74, 0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x73, 0x5f, 0x6d,
-	0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x48, 0x00, 0x52,
-	0x06, 0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x42, 0x09, 0x0a, 0x07, 0x70, 0x61, 0x79, 0x6c, 0x6f,
-	0x61, 0x64, 0x32, 0x5a, 0x0a, 0x0e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4d, 0x6f, 0x6e,
-	0x69, 0x74, 0x6f, 0x72, 0x12, 0x48, 0x0a, 0x0c, 0x53, 0x74, 0x61, 0x72, 0x74, 0x50, 0x72, 0x6f,
-	0x63, 0x65, 0x73, 0x73, 0x12, 0x21, 0x2e, 0x70, 0x73, 0x5f, 0x6d, 0x6f, 0x6e, 0x69, 0x74, 0x6f,
-	0x72, 0x2e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72,
-	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x70, 0x73, 0x5f, 0x6d, 0x6f, 0x6e,
-	0x69, 0x74, 0x6f, 0x72, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x28, 0x01, 0x30, 0x01, 0x42, 0x06,
-	0x5a, 0x04, 0x2e, 0x2f, 0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
+	0x0d, 0x72, 0x65, 0x63, 0x65, 0x69, 0x76, 0x65, 0x4f, 0x75, 0x74, 0x70, 0x75, 0x74, 0x22, 0x7d,
+	0x0a, 0x15, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72,
+	0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12, 0x2f, 0x0a, 0x07, 0x70, 0x72, 0x6f, 0x63, 0x65,
+	0x73, 0x73, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x70, 0x73, 0x5f, 0x6d, 0x6f,
+	0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x48, 0x00, 0x52,
+	0x07, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x12, 0x2c, 0x0a, 0x06, 0x66, 0x69, 0x6c, 0x74,
+	0x65, 0x72, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x12, 0x2e, 0x70, 0x73, 0x5f, 0x6d, 0x6f,
+	0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x46, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x48, 0x00, 0x52, 0x06,
+	0x66, 0x69, 0x6c, 0x74, 0x65, 0x72, 0x42, 0x05, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x22, 0x60, 0x0a,
+	0x0e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x12,
+	0x16, 0x0a, 0x05, 0x6b, 0x65, 0x79, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28, 0x04, 0x48, 0x00,
+	0x52, 0x05, 0x6b, 0x65, 0x79, 0x49, 0x64, 0x12, 0x2f, 0x0a, 0x07, 0x70, 0x72, 0x6f, 0x63, 0x65,
+	0x73, 0x73, 0x18, 0x02, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x13, 0x2e, 0x70, 0x73, 0x5f, 0x6d, 0x6f,
+	0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x48, 0x00, 0x52,
+	0x07, 0x70, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x42, 0x05, 0x0a, 0x03, 0x6d, 0x73, 0x67, 0x22,
+	0x3e, 0x0a, 0x10, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x71, 0x75,
+	0x65, 0x73, 0x74, 0x12, 0x14, 0x0a, 0x05, 0x6b, 0x65, 0x79, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01,
+	0x28, 0x04, 0x52, 0x05, 0x6b, 0x65, 0x79, 0x49, 0x64, 0x12, 0x14, 0x0a, 0x05, 0x74, 0x65, 0x72,
+	0x6d, 0x73, 0x18, 0x02, 0x20, 0x03, 0x28, 0x09, 0x52, 0x05, 0x74, 0x65, 0x72, 0x6d, 0x73, 0x22,
+	0x27, 0x0a, 0x0f, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e,
+	0x73, 0x65, 0x12, 0x14, 0x0a, 0x05, 0x6b, 0x65, 0x79, 0x49, 0x64, 0x18, 0x01, 0x20, 0x01, 0x28,
+	0x04, 0x52, 0x05, 0x6b, 0x65, 0x79, 0x49, 0x64, 0x22, 0x3c, 0x0a, 0x11, 0x53, 0x75, 0x62, 0x73,
+	0x63, 0x72, 0x69, 0x62, 0x65, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x27, 0x0a,
+	0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x18, 0x01, 0x20, 0x01, 0x28, 0x0b, 0x32, 0x11, 0x2e, 0x70,
+	0x73, 0x5f, 0x6d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x52,
+	0x05, 0x65, 0x76, 0x65, 0x6e, 0x74, 0x32, 0xf1, 0x01, 0x0a, 0x0e, 0x50, 0x72, 0x6f, 0x63, 0x65,
+	0x73, 0x73, 0x4d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x12, 0x48, 0x0a, 0x0c, 0x53, 0x74, 0x61,
+	0x72, 0x74, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x12, 0x21, 0x2e, 0x70, 0x73, 0x5f, 0x6d,
+	0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x4d, 0x6f,
+	0x6e, 0x69, 0x74, 0x6f, 0x72, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x11, 0x2e, 0x70,
+	0x73, 0x5f, 0x6d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x45, 0x76, 0x65, 0x6e, 0x74, 0x28,
+	0x01, 0x30, 0x01, 0x12, 0x49, 0x0a, 0x0e, 0x50, 0x72, 0x65, 0x70, 0x61, 0x72, 0x65, 0x50, 0x72,
+	0x6f, 0x63, 0x65, 0x73, 0x73, 0x12, 0x1a, 0x2e, 0x70, 0x73, 0x5f, 0x6d, 0x6f, 0x6e, 0x69, 0x74,
+	0x6f, 0x72, 0x2e, 0x50, 0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73,
+	0x74, 0x1a, 0x1b, 0x2e, 0x70, 0x73, 0x5f, 0x6d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x50,
+	0x72, 0x6f, 0x63, 0x65, 0x73, 0x73, 0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x12, 0x4a,
+	0x0a, 0x09, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65, 0x12, 0x1c, 0x2e, 0x70, 0x73,
+	0x5f, 0x6d, 0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69,
+	0x62, 0x65, 0x52, 0x65, 0x71, 0x75, 0x65, 0x73, 0x74, 0x1a, 0x1d, 0x2e, 0x70, 0x73, 0x5f, 0x6d,
+	0x6f, 0x6e, 0x69, 0x74, 0x6f, 0x72, 0x2e, 0x53, 0x75, 0x62, 0x73, 0x63, 0x72, 0x69, 0x62, 0x65,
+	0x52, 0x65, 0x73, 0x70, 0x6f, 0x6e, 0x73, 0x65, 0x30, 0x01, 0x42, 0x06, 0x5a, 0x04, 0x2e, 0x2f,
+	0x70, 0x62, 0x62, 0x06, 0x70, 0x72, 0x6f, 0x74, 0x6f, 0x33,
 }
 
 var (
@@ -324,23 +579,33 @@ func file_proto_ps_monitor_proto_rawDescGZIP() []byte {
 	return file_proto_ps_monitor_proto_rawDescData
 }
 
-var file_proto_ps_monitor_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_proto_ps_monitor_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
 var file_proto_ps_monitor_proto_goTypes = []interface{}{
 	(*Event)(nil),                 // 0: ps_monitor.Event
 	(*Process)(nil),               // 1: ps_monitor.Process
 	(*Filter)(nil),                // 2: ps_monitor.Filter
 	(*ProcessMonitorRequest)(nil), // 3: ps_monitor.ProcessMonitorRequest
+	(*ProcessRequest)(nil),        // 4: ps_monitor.ProcessRequest
+	(*SubscribeRequest)(nil),      // 5: ps_monitor.SubscribeRequest
+	(*ProcessResponse)(nil),       // 6: ps_monitor.ProcessResponse
+	(*SubscribeResponse)(nil),     // 7: ps_monitor.SubscribeResponse
 }
 var file_proto_ps_monitor_proto_depIdxs = []int32{
 	1, // 0: ps_monitor.ProcessMonitorRequest.process:type_name -> ps_monitor.Process
 	2, // 1: ps_monitor.ProcessMonitorRequest.filter:type_name -> ps_monitor.Filter
-	3, // 2: ps_monitor.ProcessMonitor.StartProcess:input_type -> ps_monitor.ProcessMonitorRequest
-	0, // 3: ps_monitor.ProcessMonitor.StartProcess:output_type -> ps_monitor.Event
-	3, // [3:4] is the sub-list for method output_type
-	2, // [2:3] is the sub-list for method input_type
-	2, // [2:2] is the sub-list for extension type_name
-	2, // [2:2] is the sub-list for extension extendee
-	0, // [0:2] is the sub-list for field type_name
+	1, // 2: ps_monitor.ProcessRequest.process:type_name -> ps_monitor.Process
+	0, // 3: ps_monitor.SubscribeResponse.event:type_name -> ps_monitor.Event
+	3, // 4: ps_monitor.ProcessMonitor.StartProcess:input_type -> ps_monitor.ProcessMonitorRequest
+	4, // 5: ps_monitor.ProcessMonitor.PrepareProcess:input_type -> ps_monitor.ProcessRequest
+	5, // 6: ps_monitor.ProcessMonitor.Subscribe:input_type -> ps_monitor.SubscribeRequest
+	0, // 7: ps_monitor.ProcessMonitor.StartProcess:output_type -> ps_monitor.Event
+	6, // 8: ps_monitor.ProcessMonitor.PrepareProcess:output_type -> ps_monitor.ProcessResponse
+	7, // 9: ps_monitor.ProcessMonitor.Subscribe:output_type -> ps_monitor.SubscribeResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_proto_ps_monitor_proto_init() }
@@ -397,10 +662,62 @@ func file_proto_ps_monitor_proto_init() {
 				return nil
 			}
 		}
+		file_proto_ps_monitor_proto_msgTypes[4].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ProcessRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_proto_ps_monitor_proto_msgTypes[5].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SubscribeRequest); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_proto_ps_monitor_proto_msgTypes[6].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*ProcessResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
+		file_proto_ps_monitor_proto_msgTypes[7].Exporter = func(v interface{}, i int) interface{} {
+			switch v := v.(*SubscribeResponse); i {
+			case 0:
+				return &v.state
+			case 1:
+				return &v.sizeCache
+			case 2:
+				return &v.unknownFields
+			default:
+				return nil
+			}
+		}
 	}
 	file_proto_ps_monitor_proto_msgTypes[3].OneofWrappers = []interface{}{
 		(*ProcessMonitorRequest_Process)(nil),
 		(*ProcessMonitorRequest_Filter)(nil),
+	}
+	file_proto_ps_monitor_proto_msgTypes[4].OneofWrappers = []interface{}{
+		(*ProcessRequest_KeyId)(nil),
+		(*ProcessRequest_Process)(nil),
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
@@ -408,7 +725,7 @@ func file_proto_ps_monitor_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: file_proto_ps_monitor_proto_rawDesc,
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   8,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
@@ -435,6 +752,8 @@ const _ = grpc.SupportPackageIsVersion6
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type ProcessMonitorClient interface {
 	StartProcess(ctx context.Context, opts ...grpc.CallOption) (ProcessMonitor_StartProcessClient, error)
+	PrepareProcess(ctx context.Context, in *ProcessRequest, opts ...grpc.CallOption) (*ProcessResponse, error)
+	Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (ProcessMonitor_SubscribeClient, error)
 }
 
 type processMonitorClient struct {
@@ -476,9 +795,52 @@ func (x *processMonitorStartProcessClient) Recv() (*Event, error) {
 	return m, nil
 }
 
+func (c *processMonitorClient) PrepareProcess(ctx context.Context, in *ProcessRequest, opts ...grpc.CallOption) (*ProcessResponse, error) {
+	out := new(ProcessResponse)
+	err := c.cc.Invoke(ctx, "/ps_monitor.ProcessMonitor/PrepareProcess", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *processMonitorClient) Subscribe(ctx context.Context, in *SubscribeRequest, opts ...grpc.CallOption) (ProcessMonitor_SubscribeClient, error) {
+	stream, err := c.cc.NewStream(ctx, &_ProcessMonitor_serviceDesc.Streams[1], "/ps_monitor.ProcessMonitor/Subscribe", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &processMonitorSubscribeClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type ProcessMonitor_SubscribeClient interface {
+	Recv() (*SubscribeResponse, error)
+	grpc.ClientStream
+}
+
+type processMonitorSubscribeClient struct {
+	grpc.ClientStream
+}
+
+func (x *processMonitorSubscribeClient) Recv() (*SubscribeResponse, error) {
+	m := new(SubscribeResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // ProcessMonitorServer is the server API for ProcessMonitor service.
 type ProcessMonitorServer interface {
 	StartProcess(ProcessMonitor_StartProcessServer) error
+	PrepareProcess(context.Context, *ProcessRequest) (*ProcessResponse, error)
+	Subscribe(*SubscribeRequest, ProcessMonitor_SubscribeServer) error
 }
 
 // UnimplementedProcessMonitorServer can be embedded to have forward compatible implementations.
@@ -487,6 +849,12 @@ type UnimplementedProcessMonitorServer struct {
 
 func (*UnimplementedProcessMonitorServer) StartProcess(ProcessMonitor_StartProcessServer) error {
 	return status.Errorf(codes.Unimplemented, "method StartProcess not implemented")
+}
+func (*UnimplementedProcessMonitorServer) PrepareProcess(context.Context, *ProcessRequest) (*ProcessResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method PrepareProcess not implemented")
+}
+func (*UnimplementedProcessMonitorServer) Subscribe(*SubscribeRequest, ProcessMonitor_SubscribeServer) error {
+	return status.Errorf(codes.Unimplemented, "method Subscribe not implemented")
 }
 
 func RegisterProcessMonitorServer(s *grpc.Server, srv ProcessMonitorServer) {
@@ -519,16 +887,65 @@ func (x *processMonitorStartProcessServer) Recv() (*ProcessMonitorRequest, error
 	return m, nil
 }
 
+func _ProcessMonitor_PrepareProcess_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ProcessRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProcessMonitorServer).PrepareProcess(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/ps_monitor.ProcessMonitor/PrepareProcess",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProcessMonitorServer).PrepareProcess(ctx, req.(*ProcessRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProcessMonitor_Subscribe_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(SubscribeRequest)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(ProcessMonitorServer).Subscribe(m, &processMonitorSubscribeServer{stream})
+}
+
+type ProcessMonitor_SubscribeServer interface {
+	Send(*SubscribeResponse) error
+	grpc.ServerStream
+}
+
+type processMonitorSubscribeServer struct {
+	grpc.ServerStream
+}
+
+func (x *processMonitorSubscribeServer) Send(m *SubscribeResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 var _ProcessMonitor_serviceDesc = grpc.ServiceDesc{
 	ServiceName: "ps_monitor.ProcessMonitor",
 	HandlerType: (*ProcessMonitorServer)(nil),
-	Methods:     []grpc.MethodDesc{},
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "PrepareProcess",
+			Handler:    _ProcessMonitor_PrepareProcess_Handler,
+		},
+	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "StartProcess",
 			Handler:       _ProcessMonitor_StartProcess_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
+		},
+		{
+			StreamName:    "Subscribe",
+			Handler:       _ProcessMonitor_Subscribe_Handler,
+			ServerStreams: true,
 		},
 	},
 	Metadata: "proto/ps_monitor.proto",

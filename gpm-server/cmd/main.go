@@ -36,7 +36,12 @@ func main() {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			return monitor.RunServer(host, port)
+			server := monitor.Server{
+				Host: host,
+				Port: port,
+			}
+
+			return server.Start()
 		},
 	}
 
@@ -45,5 +50,3 @@ func main() {
 		log.Fatal(err)
 	}
 }
-
-
