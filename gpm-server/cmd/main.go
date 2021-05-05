@@ -1,7 +1,6 @@
 package main
 
 import (
-	"github.com/alexpfx/go_process_monitor/monitor"
 	"github.com/urfave/cli/v2"
 	"log"
 	"os"
@@ -36,12 +35,13 @@ func main() {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			server := monitor.Server{
+			/*server := monitor.Server{
 				Host: host,
 				Port: port,
 			}
 
-			return server.Start()
+			return server.Start()*/
+			return nil
 		},
 	}
 
