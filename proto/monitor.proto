@@ -5,12 +5,7 @@ package monitor;
 
 message Process{
   string process = 1;
-    string args = 2;
-}
-message Event{
-  string psUid = 1;
-  string filter = 2;
-  string text = 3;
+  string args = 2;
 }
 
 message RegisterRequest{
@@ -18,20 +13,10 @@ message RegisterRequest{
 }
 
 message RegisterResponse{
-  string psUid = 2;
+  string psUid = 1;
 }
 
-message SubscribeRequest{
-  int32 command = 1;
-  string psId = 2;
-  string term = 3;
-}
 
-message SubscribeResponse{
-
-}
-
-service ProcessMonitor{
+service ProcessMonitor{	
   rpc RegisterProcess (RegisterRequest) returns (RegisterResponse);
-  rpc Subscribe(SubscribeRequest) returns (SubscribeResponse);
 }
