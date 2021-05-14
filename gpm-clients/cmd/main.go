@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	"github.com/alexpfx/go_process_monitor/internal/client"
-	"github.com/uMrfave/cli/v2"
+	"github.com/alexpfx/go_process_monitor/pb"
+	"github.com/urfave/cli/v2"
+	"google.golang.org/grpc"
 	"log"
 	"os"
+	"strings"
 )
 
 var host string
@@ -14,6 +17,61 @@ var pattern string
 
 func main() {
 	app := &cli.App{
+		Commands: []*cli.Command{
+			{
+				Name:  "register",
+				Usage: "register a command to later monitoring",
+				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:    "exec",
+						Aliases: []string{"-x"},
+						Usage:   "also execute the command",
+						Value:   true,
+					},
+				},
+
+				Action: func(c *cli.Context) error {
+					if c.NArg() < 1 {
+						return fmt.Errorf("usage:\n ps cmd [args...]")
+					}
+					cmd := c.Args().First()
+					args := c.Args().Tail()
+					fmt.Println(cmd)
+					fmt.Println(args)
+					host := c.String("host")
+					port := c.Int("port")
+					conn, err := grpc.Dial(fmt.Sprintf("%s:%d", host, port), grpc.WithInsecure())
+					if err != nil {
+						return err
+					}
+					defer conn.Close()
+					client := pb.NewProcessMonitorClient(conn)
+					req := &pb.RegisterRequest{
+						Process: &pb.Process{
+							Name: cmd,
+							Args: strings.Join(args, " "),
+						},
+					}
+					res, err := client.RegisterProcess(context.Background(), req)
+					if err != nil {
+						return err
+					}
+					shouldExec := c.Bool("exec")
+					if !shouldExec {
+						return nil
+					}
+
+					rReq := &pb.RunRequest{
+						PsUid: res.PsUid,
+					}
+
+					rRes, err := client.RunProcess(context.Background(), rReq)
+					log.Println(rRes)
+
+					return nil
+				},
+			},
+		},
 		Flags: []cli.Flag{
 			&cli.IntFlag{
 				Name:        "port",
@@ -30,19 +88,12 @@ func main() {
 			&cli.StringFlag{
 				Name:        "pattern",
 				Aliases:     []string{"s"},
-				Required:    true,
 				Destination: &pattern,
 			},
 		},
 		Action: func(c *cli.Context) error {
-			if c.NArg() < 1 {
-				return fmt.Errorf("usage:\n ps cmd [args...]")
-			}
-			cmd := c.Args().First()
-			args := c.Args().Tail()
 
-			err := client.StartAndListen(host, port, cmd, args, pattern)
-			return err
+			return nil
 		},
 	}
 	err := app.Run(os.Args)
