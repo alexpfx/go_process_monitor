@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+option  go_package = "./pb";
+package monitor;
+
+message Process{
+  string name = 1;
+  string args = 2;
+}
+
+message RegisterRequest{
+  Process process = 1;
+}
+
+message RegisterResponse{
+  string psUid = 1;
+}
+
+message RunRequest {
+	string psUid = 1;
+}
+
+message RunResponse{
+	Process process = 1;
+	int64 startTime = 2;
+}
+
+service ProcessMonitor{	
+  rpc RegisterProcess (RegisterRequest) returns (RegisterResponse);
+  rpc RunProcess (RunRequest) returns (RunResponse);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+

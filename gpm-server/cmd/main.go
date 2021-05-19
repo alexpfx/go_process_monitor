@@ -1,9 +1,14 @@
 package main
 
 import (
-	"github.com/alexpfx/go_process_monitor/monitor"
+	"fmt"
+
+	"github.com/alexpfx/go_process_monitor/internal/psmon"
+
 	"github.com/urfave/cli/v2"
+
 	"log"
+
 	"os"
 	"path/filepath"
 )
@@ -36,12 +41,13 @@ func main() {
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			server := monitor.Server{
-				Host: host,
-				Port: port,
-			}
+			server := psmon.NewServer()
 
-			return server.Start()
+			host := ctx.String("host")
+			port := ctx.Int("port")
+			err := server.Start(fmt.Sprintf("%s:%d", host, port))
+
+			return err
 		},
 	}
 
