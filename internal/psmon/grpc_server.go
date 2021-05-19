@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/alexpfx/go_process_monitor/pb"
 	"google.golang.org/grpc"
+
 	"log"
 	"net"
 	"os/exec"
@@ -22,6 +23,8 @@ func (s *server) Start(address string) error {
 	if err != nil {
 		return err
 	}
+
+
 
 	grpcServer := grpc.NewServer()
 	pb.RegisterProcessMonitorServer(grpcServer, &server{

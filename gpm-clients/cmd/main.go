@@ -20,12 +20,12 @@ func main() {
 		Commands: []*cli.Command{
 			{
 				Name:  "register",
-				Usage: "register a command to later monitoring",
+				Usage: "registra um comando para posterior execução e monitoramento",
 				Flags: []cli.Flag{
 					&cli.BoolFlag{
 						Name:    "exec",
 						Aliases: []string{"-x"},
-						Usage:   "also execute the command",
+						Usage:   "executa o comando imediatamente",
 						Value:   true,
 					},
 				},
